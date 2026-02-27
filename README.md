@@ -1,50 +1,120 @@
-# Welcome to your Expo app 👋
+# Minimal Blog App (Editorial + Voice-to-Post)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Cross-platform blog app (Expo mobile + web) with editorial UI, Supabase auth, and automated voice-to-blog publishing.
 
-## Get started
+## Features
 
-1. Install dependencies
+- Google login + persistent user session
+- NYT-inspired editorial layout with dark/light theme toggle
+- Unified typography system (Questrial / Mate / Source Sans Pro)
+- Dynamic feed + detail from Supabase `posts` table (newest first)
+- Record audio on web + mobile and auto-create blog post
+- Automatic transcription via OpenAI Whisper API
+- Transcript persisted as Markdown file in Supabase Storage (`transcripts` bucket)
+- OpenAI-generated title + polished blog content from the new transcript
+- Public shareable user route (primary): `/blog-view/:username`
 
-   ```bash
-   npm install
-   ```
+Public reading routes (primary):
 
-2. Start the app
+- `/blog-view/:username`
+- `/blog-view/:username/post/:id`
 
-   ```bash
-   npx expo start
-   ```
+Legacy compatibility (redirects):
 
-In the output, you'll find options to open the app in a
+- `/u/:username` → `/blog-view/:username`
+- `/u/:username/post/:id` → `/blog-view/:username/post/:id`
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Core Architecture
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- Source of truth: Supabase Postgres (`profiles`, `posts`)
+- Transcript files: Supabase Storage (`transcripts`)
+- Voice + AI pipeline runs directly from app client
 
-## Get a fresh project
+## Project Structure
 
-When you're ready, run:
+- `app/home/index.tsx` — dynamic feed + record button
+- `app/post/[id].tsx` — dynamic post detail
+- `app/home/profile.tsx` — logout + copy share link
+- `app/blog-view/[username].tsx` — public user feed route (primary)
+- `app/blog-view/[username]/post/[id].tsx` — public post route (primary)
+- `lib/posts.ts` — feed/detail/public queries + voice endpoint call
+  and voice pipeline (`audio -> transcript markdown -> AI blog -> post`)
+- `lib/profiles.ts` — username provisioning + share URL helper
+- `lib/auth-context.tsx` — auth flow + persisted session handling
+- `lib/supabaseClient.js` — Supabase client with persistent sessions
+- `supabase/migrations/20260225_voice_to_post.sql` — schema + RLS
+
+## 1) Install app dependencies
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 2) Environment variables
 
-## Learn more
+Create `.env` from `.env.example`:
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+EXPO_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT-REF.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+# Use your deployed HTTPS domain here (used for public share links from native)
+EXPO_PUBLIC_WEB_URL=https://YOUR_DOMAIN.com
+EXPO_PUBLIC_OPENAI_API_KEY=YOUR_OPENAI_API_KEY
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## 3) Supabase DB + policies
 
-## Join the community
+Run migration in Supabase SQL editor:
 
-Join our community of developers creating universal apps.
+- `supabase/migrations/20260225_voice_to_post.sql`
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+This creates:
+
+- `profiles` table
+- `posts` table
+- `post_visibility` enum
+- RLS policies for owner-write/public-read
+- `voice-audio` storage bucket + policies
+- `transcripts` storage bucket + policies (private per-user transcript files)
+
+## 4) Google OAuth setup
+
+In Supabase + Google Cloud:
+
+- Add Supabase callback to Google OAuth: `https://<PROJECT_REF>.supabase.co/auth/v1/callback`
+
+In Supabase Dashboard → Authentication → URL Configuration:
+
+- **Site URL**: set this to your deployed web app, e.g. `https://YOUR_DOMAIN.com`
+- **Additional Redirect URLs** (add the ones you actually use):
+  - Web (production): `https://YOUR_DOMAIN.com/login`
+  - Web (local dev, optional): `http://localhost:8081/login` (and any other port Expo uses)
+  - Native (production builds): `blogapp://auth/callback`
+  - Native (Expo Go / dev): the Expo proxy callback URLs you see during sign-in (these vary)
+
+## 5) Run app
+
+```bash
+npx expo start --tunnel
+```
+
+## Voice-to-post flow test
+
+1. Sign in
+2. Tap `Record a post`
+3. Record, then stop
+4. Wait for processing (`Transcribing, saving transcript, and writing post...`)
+5. App automatically saves transcript markdown to storage
+6. App automatically generates title/content and publishes post
+7. App navigates to created post and feed updates
+
+## Public profile links
+
+- Profile auto-provisions `username` in `profiles` if missing
+- Copy button generates: `EXPO_PUBLIC_WEB_URL/blog-view/<username>`
+- Anonymous users can open `/blog-view/:username` and read public posts
+
+## Notes
+
+- OpenAI API key is currently used on the client for demo simplicity
+- Session persists until explicit logout

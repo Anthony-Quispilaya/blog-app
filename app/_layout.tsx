@@ -1,14 +1,14 @@
 import { Mate_400Regular } from "@expo-google-fonts/mate";
 import { Questrial_400Regular } from "@expo-google-fonts/questrial";
 import {
-  SourceSansPro_400Regular,
-  SourceSansPro_600SemiBold,
-  SourceSansPro_700Bold,
+    SourceSansPro_400Regular,
+    SourceSansPro_600SemiBold,
+    SourceSansPro_700Bold,
 } from "@expo-google-fonts/source-sans-pro";
 import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
+    DarkTheme,
+    DefaultTheme,
+    ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { router, Stack, usePathname, useSegments } from "expo-router";
@@ -132,6 +132,7 @@ function RootNavigator() {
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="home" options={{ headerShown: false }} />
         <Stack.Screen name="post/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="post/edit/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="blog-view" options={{ headerShown: false }} />
         <Stack.Screen name="u/[username]" options={{ headerShown: false }} />
         <Stack.Screen

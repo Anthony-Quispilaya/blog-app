@@ -414,6 +414,83 @@ export async function fetchPostById(postId: string, userId?: string) {
   return mapPost(data as unknown as PostRow);
 }
 
+type UpdatePostInput = {
+  postId: string;
+  userId: string;
+  title: string;
+  content: string;
+};
+
+export async function updatePost({
+  postId,
+  userId,
+  title,
+  content,
+}: UpdatePostInput): Promise<BlogPost> {
+  const normalizedTitle = title.trim();
+  const normalizedContent = content.trim();
+
+  if (!normalizedTitle) {
+    throw stageError("POST_UPDATE", "Title is required.");
+  }
+
+  if (!normalizedContent) {
+    throw stageError("POST_UPDATE", "Body text is required.");
+  }
+
+  const { data, error } = await supabase
+    .from("posts")
+    .update({
+      title: normalizedTitle,
+      content: normalizedContent,
+    })
+    .eq("id", postId)
+    .eq("author_id", userId)
+    .select(
+      "id,title,content,raw_transcript,created_at,audio_url,author_id,visibility,profiles!posts_author_profile_fkey(username,display_name)",
+    )
+    .maybeSingle();
+
+  if (error) {
+    throw stageError("POST_UPDATE", error.message || "Unable to update post.");
+  }
+
+  if (!data) {
+    throw stageError(
+      "POST_UPDATE",
+      "Post not found or you do not have permission to edit it.",
+    );
+  }
+
+  return mapPost(data as unknown as PostRow);
+}
+
+export async function deletePost({
+  postId,
+  userId,
+}: {
+  postId: string;
+  userId: string;
+}): Promise<void> {
+  const { data, error } = await supabase
+    .from("posts")
+    .delete()
+    .eq("id", postId)
+    .eq("author_id", userId)
+    .select("id");
+
+  if (error) {
+    throw stageError("POST_DELETE", error.message || "Unable to delete post.");
+  }
+
+  if (!data || data.length === 0) {
+    throw stageError(
+      "POST_DELETE",
+      "Post not found or you do not have permission to delete it.",
+    );
+  }
+}
+
 export async function fetchPublicPostById({
   postId,
   username,

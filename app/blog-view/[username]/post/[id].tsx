@@ -128,23 +128,18 @@ export default function PublicPostDetailScreen() {
             </Pressable>
           </View>
 
-          <View style={styles.articleWrap}>
-            <Reveal offsetY={14} blurPx={10}>
-              <View>
-                <TextHeading style={styles.title}>{post.title}</TextHeading>
-                <TextMeta style={styles.meta}>
-                  By {post.authorName} • {formatDate(post.createdAt)}
-                </TextMeta>
-                <View
-                  style={[styles.divider, { backgroundColor: colors.divider }]}
-                />
-              </View>
-            </Reveal>
-
-            <Reveal offsetY={10} blurPx={8} intensity={0.92} parallaxPx={6}>
+          <Reveal offsetY={14} blurPx={10}>
+            <View style={styles.articleWrap}>
+              <TextHeading style={styles.title}>{post.title}</TextHeading>
+              <TextMeta style={styles.meta}>
+                By {post.authorName} • {formatDate(post.createdAt)}
+              </TextMeta>
+              <View
+                style={[styles.divider, { backgroundColor: colors.divider }]}
+              />
               <TextBody style={styles.body}>{post.content}</TextBody>
-            </Reveal>
-          </View>
+            </View>
+          </Reveal>
         </MotionScrollView>
       </ScrollMotionProvider>
     </ScreenContainer>

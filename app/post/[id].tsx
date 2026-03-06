@@ -1,5 +1,6 @@
+import { useFocusEffect } from "@react-navigation/native";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
     ActivityIndicator,
     Platform,
@@ -35,30 +36,33 @@ export default function PostDetailScreen() {
   const [post, setPost] = useState<BlogPost | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const loadPost = async () => {
-      if (!params.id) {
-        setIsLoading(false);
-        return;
-      }
+  const loadPost = useCallback(async () => {
+    if (!params.id) {
+      setIsLoading(false);
+      return;
+    }
 
-      if (!session?.user.id) {
-        setPost(null);
-        setIsLoading(false);
-        return;
-      }
+    if (!session?.user.id) {
+      setPost(null);
+      setIsLoading(false);
+      return;
+    }
 
-      try {
-        setIsLoading(true);
-        const loadedPost = await fetchPostById(params.id, session?.user.id);
-        setPost(loadedPost);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadPost();
+    try {
+      setIsLoading(true);
+      const loadedPost = await fetchPostById(params.id, session.user.id);
+      setPost(loadedPost);
+    } finally {
+      setIsLoading(false);
+    }
   }, [params.id, session?.user.id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadPost();
+      return;
+    }, [loadPost]),
+  );
 
   if (!session) {
     return (
@@ -107,56 +111,86 @@ export default function PostDetailScreen() {
               },
             ]}
           >
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => {
-                if (router.canGoBack()) {
-                  router.back();
-                  return;
+            <View style={styles.headerRow}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => {
+                  if (router.canGoBack()) {
+                    router.back();
+                    return;
+                  }
+                  router.replace("/home");
+                }}
+                style={({ pressed, hovered }) => [
+                  styles.backButton,
+                  {
+                    borderColor: hovered ? colors.textMuted : colors.divider,
+                    backgroundColor:
+                      pressed || hovered ? colors.overlay : "transparent",
+                    opacity: pressed ? 0.92 : 1,
+                    transform: [{ translateY: hovered ? -1 : 0 }],
+                  },
+                  Platform.OS === "web"
+                    ? ({
+                        cursor: "pointer",
+                        transitionProperty:
+                          "transform, background-color, opacity, border-color",
+                        transitionDuration: "140ms",
+                        transitionTimingFunction: "ease-out",
+                      } as any)
+                    : null,
+                ]}
+              >
+                <TextBody style={styles.backText}>← Back to Home</TextBody>
+              </Pressable>
+
+              <View style={{ flex: 1 }} />
+
+              <Pressable
+                accessibilityRole="button"
+                onPress={() =>
+                  router.push({
+                    pathname: "/post/edit/[id]",
+                    params: { id: String(params.id) },
+                  })
                 }
-                router.replace("/home");
-              }}
-              style={({ pressed, hovered }) => [
-                styles.backButton,
-                {
-                  borderColor: hovered ? colors.textMuted : colors.divider,
-                  backgroundColor:
-                    pressed || hovered ? colors.overlay : "transparent",
-                  opacity: pressed ? 0.92 : 1,
-                  transform: [{ translateY: hovered ? -1 : 0 }],
-                },
-                Platform.OS === "web"
-                  ? ({
-                      cursor: "pointer",
-                      transitionProperty:
-                        "transform, background-color, opacity, border-color",
-                      transitionDuration: "140ms",
-                      transitionTimingFunction: "ease-out",
-                    } as any)
-                  : null,
-              ]}
-            >
-              <TextBody style={styles.backText}>← Back to Home</TextBody>
-            </Pressable>
+                style={({ pressed, hovered }) => [
+                  styles.editButton,
+                  {
+                    borderColor: hovered ? colors.textMuted : colors.divider,
+                    backgroundColor:
+                      pressed || hovered ? colors.overlay : "transparent",
+                    opacity: pressed ? 0.92 : 1,
+                    transform: [{ translateY: hovered ? -1 : 0 }],
+                  },
+                  Platform.OS === "web"
+                    ? ({
+                        cursor: "pointer",
+                        transitionProperty:
+                          "transform, background-color, opacity, border-color",
+                        transitionDuration: "140ms",
+                        transitionTimingFunction: "ease-out",
+                      } as any)
+                    : null,
+                ]}
+              >
+                <TextBody style={styles.backText}>Edit</TextBody>
+              </Pressable>
+            </View>
           </View>
 
-          <View style={styles.articleWrap}>
-            <Reveal offsetY={14} blurPx={10}>
-              <View>
-                <TextHeading style={styles.title}>{post.title}</TextHeading>
-                <TextMeta style={styles.meta}>
-                  By {post.authorName} • {formatDate(post.createdAt)}
-                </TextMeta>
-                <View
-                  style={[styles.divider, { backgroundColor: colors.divider }]}
-                />
-              </View>
-            </Reveal>
-
-            <Reveal offsetY={10} blurPx={8} intensity={0.92} parallaxPx={6}>
+          <Reveal offsetY={14} blurPx={10}>
+            <View style={styles.articleWrap}>
+              <TextHeading style={styles.title}>{post.title}</TextHeading>
+              <TextMeta style={styles.meta}>
+                By {post.authorName} • {formatDate(post.createdAt)}
+              </TextMeta>
+              <View
+                style={[styles.divider, { backgroundColor: colors.divider }]}
+              />
               <TextBody style={styles.body}>{post.content}</TextBody>
-            </Reveal>
-          </View>
+            </View>
+          </Reveal>
         </MotionScrollView>
       </ScrollMotionProvider>
     </ScreenContainer>
@@ -181,7 +215,19 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xs,
     borderBottomWidth: 1,
   },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
   backButton: {
+    alignSelf: "flex-start",
+    borderWidth: 1,
+    borderRadius: 2,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+  },
+  editButton: {
     alignSelf: "flex-start",
     borderWidth: 1,
     borderRadius: 2,

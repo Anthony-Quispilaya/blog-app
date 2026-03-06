@@ -13,6 +13,8 @@ type RevealProps = PropsWithChildren<{
   style?: StyleProp<ViewStyle>;
   offsetY?: number;
   blurPx?: number;
+  intensity?: number;
+  parallaxPx?: number;
 }>;
 
 export function Reveal({
@@ -20,6 +22,8 @@ export function Reveal({
   style,
   offsetY = 18,
   blurPx = 10,
+  intensity = 1,
+  parallaxPx = 6,
 }: RevealProps) {
   const scrollY = useScrollY();
   const { height: viewportHeight } = useWindowDimensions();
@@ -68,8 +72,9 @@ export function Reveal({
       (scrollY.value - driftStart) / Math.max(1, driftEnd - driftStart);
     const drift = clamp(driftRaw, 0, 1);
 
-    const opacity = 0.04 + 0.96 * eased;
-    const translateY = offsetY * (1 - eased) - 6 * drift;
+    const maxOpacity = clamp(intensity, 0, 1);
+    const opacity = 0.04 + Math.max(0, maxOpacity - 0.04) * eased;
+    const translateY = offsetY * (1 - eased) - parallaxPx * drift;
     const scale = 0.988 + 0.012 * eased;
 
     const base: any = {
@@ -84,7 +89,7 @@ export function Reveal({
     }
 
     return base;
-  }, [blurPx, offsetY, vh]);
+  }, [blurPx, intensity, offsetY, parallaxPx, vh]);
 
   return (
     <Animated.View onLayout={onLayout} style={[style, animatedStyle]}>

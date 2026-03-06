@@ -1,21 +1,22 @@
 import { Reveal } from "@/components/motion/reveal";
 import {
-  MotionScrollView,
-  ScrollMotionProvider,
+    MotionScrollView,
+    ScrollMotionProvider,
 } from "@/components/motion/scroll-context";
+import { useFocusEffect } from "@react-navigation/native";
 import { Audio } from "expo-av";
 import { router } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Animated,
-  Platform,
-  Pressable,
-  StyleSheet,
-  TextInput,
-  useWindowDimensions,
-  View,
+    ActivityIndicator,
+    Alert,
+    Animated,
+    Platform,
+    Pressable,
+    StyleSheet,
+    TextInput,
+    useWindowDimensions,
+    View,
 } from "react-native";
 
 import { PostCard } from "@/components/post-card";
@@ -111,6 +112,23 @@ export default function HomeScreen() {
   const nativeHasMeteringRef = useRef(false);
   const nativeLastDurationUpdateRef = useRef(0);
 
+  const loadPosts = useCallback(async () => {
+    try {
+      setIsLoadingPosts(true);
+      if (!session?.user.id) {
+        setPosts([]);
+        return;
+      }
+
+      const feedPosts = await fetchFeedPosts(session.user.id);
+      setPosts(feedPosts);
+    } catch (error) {
+      Alert.alert("Unable to load posts", (error as Error).message);
+    } finally {
+      setIsLoadingPosts(false);
+    }
+  }, [session?.user.id]);
+
   useEffect(() => {
     const pulse = pulseRef.current;
 
@@ -141,26 +159,12 @@ export default function HomeScreen() {
     };
   }, [voiceState]);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setIsLoadingPosts(true);
-        if (!session?.user.id) {
-          setPosts([]);
-          return;
-        }
-
-        const feedPosts = await fetchFeedPosts(session.user.id);
-        setPosts(feedPosts);
-      } catch (error) {
-        Alert.alert("Unable to load posts", (error as Error).message);
-      } finally {
-        setIsLoadingPosts(false);
-      }
-    };
-
-    load();
-  }, [session?.user.id]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadPosts();
+      return;
+    }, [loadPosts]),
+  );
 
   const filteredPosts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();

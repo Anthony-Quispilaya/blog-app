@@ -11,7 +11,7 @@ export function Masthead() {
     <View>
       <View style={styles.row}>
         <View style={styles.sideSpacer} />
-        <TextDisplay style={styles.title}>The Daily Ledger</TextDisplay>
+        <TextDisplay style={styles.title}>EasyBlog AI</TextDisplay>
         <View style={styles.rightGroup}>
           <Pressable
             accessibilityRole="button"

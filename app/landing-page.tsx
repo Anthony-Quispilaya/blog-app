@@ -61,7 +61,13 @@ export default function LandingPage() {
           <View style={styles.centerWrap}>
             <View style={styles.content}>
               <Reveal offsetY={12} blurPx={8}>
-                <TextMeta style={[styles.kicker, { color: colors.textMuted }]}>
+                <TextMeta
+                  style={[
+                    styles.kicker,
+                    { color: colors.textMuted },
+                    { margin: 20 },
+                  ]}
+                >
                   Welcome to your automated blog website.
                 </TextMeta>
                 <TextDisplay style={styles.heroTitle}>

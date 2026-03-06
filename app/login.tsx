@@ -1,10 +1,10 @@
 import {
-    ActivityIndicator,
-    Alert,
-    Platform,
-    Pressable,
-    StyleSheet,
-    View,
+  ActivityIndicator,
+  Alert,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
 } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
@@ -31,7 +31,7 @@ export default function LoginScreen() {
   return (
     <ScreenContainer center withMasthead={false}>
       <View style={styles.content}>
-        <TextDisplay style={styles.title}>The Daily Ledger</TextDisplay>
+        <TextDisplay style={styles.title}>EasyBlog AI</TextDisplay>
         <TextMeta style={styles.tagline}>
           Simple publishing, beautifully presented.
         </TextMeta>

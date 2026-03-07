@@ -1,6 +1,7 @@
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Platform,
   Pressable,
   StyleSheet,
@@ -8,14 +9,19 @@ import {
 } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
-import { TextBodyStrong, TextDisplay, TextMeta } from "@/components/typography";
+import { TextBodyStrong, TextMeta } from "@/components/typography";
 import { spacing } from "@/constants/editorial";
 import { useAuth } from "@/lib/auth-context";
 import { useAppTheme } from "@/lib/theme-context";
 
 export default function LoginScreen() {
   const { session, isLoading, signInWithGoogle } = useAuth();
-  const { colors } = useAppTheme();
+  const { colors, mode } = useAppTheme();
+
+  const logoSource =
+    mode === "dark"
+      ? require("../assets/images/darkmode_logo.png")
+      : require("../assets/images/lightmode_logo.png");
 
   if (!isLoading && session) {
     return null;
@@ -31,7 +37,12 @@ export default function LoginScreen() {
   return (
     <ScreenContainer center withMasthead={false}>
       <View style={styles.content}>
-        <TextDisplay style={styles.title}>EasyBlog AI</TextDisplay>
+        <Image
+          source={logoSource}
+          style={styles.logo}
+          resizeMode="contain"
+          accessibilityLabel="EasyBlog AI"
+        />
         <TextMeta style={styles.tagline}>
           Simple publishing, beautifully presented.
         </TextMeta>
@@ -82,11 +93,13 @@ const styles = StyleSheet.create({
     alignItems: "stretch",
     paddingHorizontal: 24,
   },
-  title: {
-    textAlign: "center",
+  logo: {
+    alignSelf: "center",
+    width: "100%",
+    maxWidth: 260,
+    height: 84,
+    marginTop: 8,
     marginBottom: 8,
-    fontSize: 38,
-    lineHeight: 44,
   },
   tagline: {
     marginBottom: spacing.lg,

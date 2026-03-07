@@ -2,25 +2,25 @@ import { useFocusEffect } from "@react-navigation/native";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import {
-    ActivityIndicator,
-    Platform,
-    Pressable,
-    StyleSheet,
-    View,
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
 } from "react-native";
 
 import { Reveal } from "@/components/motion/reveal";
 import {
-    MotionScrollView,
-    ScrollMotionProvider,
+  MotionScrollView,
+  ScrollMotionProvider,
 } from "@/components/motion/scroll-context";
 
 import { ScreenContainer } from "@/components/screen-container";
 import {
-    TextBody,
-    TextDisplay,
-    TextHeading,
-    TextMeta,
+  TextBody,
+  TextDisplay,
+  TextHeading,
+  TextMeta,
 } from "@/components/typography";
 import { spacing } from "@/constants/editorial";
 import { useAuth } from "@/lib/auth-context";
@@ -207,6 +207,7 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 760,
     alignSelf: "center",
+    marginTop: spacing.lg,
   },
   stickyHeader: {
     width: "100%",

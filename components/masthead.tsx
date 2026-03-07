@@ -1,17 +1,29 @@
-import { Platform, Pressable, StyleSheet, View } from "react-native";
+import { Image, Platform, Pressable, StyleSheet, View } from "react-native";
 
-import { TextBody, TextDisplay } from "@/components/typography";
+import { TextBody } from "@/components/typography";
 import { spacing } from "@/constants/editorial";
 import { useAppTheme } from "@/lib/theme-context";
 
 export function Masthead() {
   const { colors, mode, toggleMode } = useAppTheme();
 
+  const logoSource =
+    mode === "dark"
+      ? require("../assets/images/darkmode_logo.png")
+      : require("../assets/images/lightmode_logo.png");
+
   return (
     <View>
       <View style={styles.row}>
         <View style={styles.sideSpacer} />
-        <TextDisplay style={styles.title}>EasyBlog AI</TextDisplay>
+        <View style={styles.logoWrap}>
+          <Image
+            source={logoSource}
+            style={styles.logo}
+            resizeMode="contain"
+            accessibilityLabel="EasyBlog AI"
+          />
+        </View>
         <View style={styles.rightGroup}>
           <Pressable
             accessibilityRole="button"
@@ -58,11 +70,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: spacing.sm,
   },
-  title: {
-    textAlign: "center",
-    fontSize: 26,
-    lineHeight: 30,
+  logoWrap: {
     flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logo: {
+    width: "100%",
+    maxWidth: 260,
+    height: 84,
   },
   sideSpacer: {
     width: 58,
